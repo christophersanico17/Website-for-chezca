@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Table Reservation System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-page show">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <h1>📚 Library Reservation</h1>
+                    <p>Table Management System</p>
+                </div>
+                
+                <div class="login-tabs">
+                    <button class="login-tab-btn active" data-tab="user">User Login</button>
+                    <button class="login-tab-btn" data-tab="admin">Admin Login</button>
+                </div>
+
+                <!-- User Login Tab -->
+                <div id="userLoginTab" class="login-tab-content active">
+                    <form id="userLoginForm" class="login-form">
+                        <div class="form-group">
+                            <label for="userName">Full Name</label>
+                            <input type="text" id="userName" placeholder="Enter your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userEmail">Email</label>
+                            <input type="email" id="userEmail" placeholder="Enter your email" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large">Enter as User</button>
+                    </form>
+                </div>
+
+                <!-- Admin Login Tab -->
+                <div id="adminLoginTab" class="login-tab-content">
+                    <form id="adminLoginForm" class="login-form">
+                        <div class="form-group">
+                            <label for="adminUsername">Username</label>
+                            <input type="text" id="adminUsername" placeholder="Enter admin username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="adminPassword">Password</label>
+                            <input type="password" id="adminPassword" placeholder="Enter admin password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-large">Login as Admin</button>
+                    </form>
+                    <div class="admin-hint">
+                        <p><strong>Demo Credentials:</strong></p>
+                        <p>Username: <code>admin</code></p>
+                        <p>Password: <code>admin123</code></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="container hidden">
+        <header>
+            <div class="header-left">
+                <h1>📚 Library Table Reservation System</h1>
+                <p id="headerSubtitle">Reserve and manage table availability</p>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <span id="currentUserDisplay">User</span>
+                    <span id="userRoleDisplay" class="role-badge">User</span>
+                </div>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Admin Panel -->
+            <section id="adminPanel" class="admin-panel hidden">
+                <div class="admin-header">
+                    <h2>🔧 Admin Control Panel</h2>
+                </div>
+                
+                <div class="admin-controls">
+                    <div class="admin-section">
+                        <h3>Table Management</h3>
+                        <div class="admin-buttons">
+                            <button id="resetAllTablesBtn" class="btn btn-danger">Reset All Tables</button>
+                            <button id="clearAllDataBtn" class="btn btn-danger">Clear All Data</button>
+                        </div>
+                    </div>
+
+                    <div class="admin-section">
+                        <h3>Add New Table</h3>
+                        <div class="form-inline">
+                            <input type="number" id="newTableCapacity" placeholder="Capacity (seats)" min="1" max="20" value="4">
+                            <button id="addTableBtn" class="btn btn-primary">Add Table</button>
+                        </div>
+                    </div>
+
+                    <div class="admin-section">
+                        <h3>System Stats</h3>
+                        <div class="admin-stats">
+                            <div class="admin-stat-item">
+                                <span>Total Bookings:</span>
+                                <strong id="totalBookings">0</strong>
+                            </div>
+                            <div class="admin-stat-item">
+                                <span>Total Users:</span>
+                                <strong id="totalUsers">0</strong>
+                            </div>
+                            <div class="admin-stat-item">
+                                <span>Database Size:</span>
+                                <strong id="databaseSize">0 KB</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Data View Tabs -->
+                <div class="admin-data-tabs">
+                    <button class="admin-data-tab-btn active" data-tab="bookings">All Bookings</button>
+                    <button class="admin-data-tab-btn" data-tab="users">User Accounts</button>
+                    <button class="admin-data-tab-btn" data-tab="tables">Table Status</button>
+                </div>
+
+                <div class="admin-data-view">
+                    <!-- Bookings Tab -->
+                    <div id="bookingsView" class="admin-data-tab-content active">
+                        <h3>All Bookings</h3>
+                        <div id="adminBookingsTable" class="admin-table"></div>
+                    </div>
+
+                    <!-- Users Tab -->
+                    <div id="usersView" class="admin-data-tab-content">
+                        <h3>User Accounts</h3>
+                        <div id="adminUsersTable" class="admin-table"></div>
+                    </div>
+
+                    <!-- Tables Tab -->
+                    <div id="tablesView" class="admin-data-tab-content">
+                        <h3>Table Status</h3>
+                        <div id="adminTablesTable" class="admin-table"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Statistics Section -->
+            <section class="stats-section">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTables">8</div>
+                    <div class="stat-label">Total Tables</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number available" id="availableTables">0</div>
+                    <div class="stat-label">Available Tables</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number occupied" id="occupiedTables">0</div>
+                    <div class="stat-label">Occupied Tables</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalSeatsAvailable">0</div>
+                    <div class="stat-label">Total Seats Available</div>
+                </div>
+            </section>
+
+            <!-- Filters Section -->
+            <section class="filters-section">
+                <button class="filter-btn active" data-filter="all">All Tables</button>
+                <button class="filter-btn" data-filter="available">Available Only</button>
+                <button class="filter-btn" data-filter="occupied">Occupied Only</button>
+            </section>
+
+            <!-- Tables Grid -->
+            <section class="tables-section">
+                <div id="tablesGrid" class="tables-grid">
+                    <!-- Tables will be dynamically generated here -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal for Booking -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Book Table <span id="tableNumber"></span></h2>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="bookingUserName">Your Name:</label>
+                    <input type="text" id="bookingUserName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="bookingUserEmail">Email:</label>
+                    <input type="email" id="bookingUserEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label for="bookingSeatsNeeded">Number of Seats Needed:</label>
+                    <input type="number" id="bookingSeatsNeeded" min="1" max="20" placeholder="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="bookingPurpose">Purpose/Notes:</label>
+                    <textarea id="bookingPurpose" placeholder="What will you use the table for?" rows="3"></textarea>
+                </div>
+                <button id="confirmBooking" class="btn btn-primary">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Table Details -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Table <span id="detailsTableNumber"></span> Details</h2>
+            <div class="modal-body">
+                <div class="table-details">
+                    <p><strong>Status:</strong> <span id="detailsStatus"></span></p>
+                    <p><strong>Capacity:</strong> <span id="detailsCapacity"></span> seats</p>
+                    <p><strong>Available Seats:</strong> <span id="detailsAvailableSeats"></span></p>
+                    <p><strong>Booked Seats:</strong> <span id="detailsBookedSeats"></span></p>
+                    <div id="bookingsList"></div>
+                </div>
+                <div class="modal-actions">
+                    <button id="releaseTableBtn" class="btn btn-danger" style="display: none;">Mark as Available</button>
+                    <button id="editTableBtn" class="btn btn-secondary" style="display: none;">Edit Table</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for All Bookings (Admin) -->
+    <div id="allBookingsModal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="close">&times;</span>
+            <h2>All Bookings Report</h2>
+            <div class="modal-body">
+                <div id="allBookingsList" class="all-bookings-list">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Edit Table (Admin) -->
+    <div id="editTableModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Table <span id="editTableNumber"></span></h2>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editTableCapacity">Capacity (seats):</label>
+                    <input type="number" id="editTableCapacity" min="1" max="20" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTableBooked">Booked Seats:</label>
+                    <input type="number" id="editTableBooked" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editTableStatus">Status:</label>
+                    <select id="editTableStatus">
+                        <option value="available">Available</option>
+                        <option value="occupied">Occupied</option>
+                    </select>
+                </div>
+                <button id="saveTableChanges" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Delete User Account -->
+    <div id="deleteUserModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Delete User Account</h2>
+            <div class="modal-body">
+                <p style="color: #ef4444; font-weight: bold; margin-bottom: 15px;">⚠️ WARNING: This action cannot be undone!</p>
+                <p>Are you sure you want to delete the account for:</p>
+                <p id="deleteUserName" style="font-weight: bold; margin: 15px 0;"></p>
+                <p style="color: #6b7280; font-size: 0.95em; margin: 15px 0;">All bookings associated with this account will also be deleted.</p>
+                <div class="modal-actions">
+                    <button id="confirmDeleteUserBtn" class="btn btn-danger">Delete Account</button>
+                    <button id="cancelDeleteUserBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
