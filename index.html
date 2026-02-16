@@ -2,291 +2,287 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Library Table Reservation System</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SittyPie | Campus Library</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #1e3a8a; --accent: #d4af37; --bg: #f8fafc; 
+            --card: #ffffff; --text: #1e293b; --danger: #e11d48; 
+            --success: #10b981; --warning: #f59e0b; --border: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9;
+            --border: #334155; --primary: #3b82f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; }
+        body { background: var(--bg); color: var(--text); line-height: 1.5; overflow-x: hidden; }
+
+        #alertBox { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(200%); z-index: 10000; background: var(--warning); color: white; padding: 15px 25px; border-radius: 50px; width: 90%; max-width: 400px; text-align: center; font-weight: bold; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #alertBox.show { transform: translateX(-50%) translateY(0); }
+
+        .navbar { background: var(--card); padding: 0.8rem 1rem; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: sticky; top:0; z-index: 100; }
+        .nav-brand { font-weight: 800; font-size: 1.3rem; color: var(--primary); }
+
+        #authOverlay { position: fixed; inset: 0; z-index: 9999; background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .auth-card { background: var(--card); padding: 2rem; border-radius: 1.5rem; width: 100%; max-width: 400px; }
+        .tab-group { display: flex; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; border: 1px solid var(--border); }
+        .tab-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; background: var(--bg); color: var(--text); }
+        .tab-btn.active { background: var(--primary); color: white; }
+
+        .container { width: 100%; max-width: 1400px; margin: 1rem auto; padding: 0 1rem; }
+        .wing-title { font-size: 1.5rem; font-weight: 800; margin: 1.5rem 0 1rem; color: var(--primary); border-left: 5px solid var(--accent); padding-left: 12px; }
+        
+        .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; }
+
+        .seat-card { background: var(--card); padding: 1.2rem; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .seat-card.mine { border: 2.5px solid var(--accent); }
+
+        .btn { padding: 12px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; font-size: 1rem; }
+        .btn-blue { background: var(--primary); color: white; }
+        .btn-danger { background: rgba(225, 29, 72, 0.1); color: var(--danger); }
+        .btn-ext { background: transparent; border: 2px solid var(--success); color: var(--success); font-size: 0.8rem; }
+
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); font-size: 1rem; }
+        
+        .user-pfp { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+        .admin-wrap { overflow-x: auto; background: var(--card); border-radius: 15px; border: 1px solid var(--border); }
+        .admin-table { width: 100%; min-width: 700px; border-collapse: collapse; }
+        .student-chip { background: var(--bg); padding: 10px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); }
+
+        .hidden { display: none !important; }
+        .avatar-upload { width: 80px; height: 80px; background: var(--bg); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px dashed var(--border); overflow: hidden; }
+        .avatar-upload img { width: 100%; height: 100%; object-fit: cover; }
+    </style>
 </head>
 <body>
-    <!-- Login Page -->
-    <div id="loginPage" class="login-page show">
-        <div class="login-container">
-            <div class="login-card">
-                <div class="login-header">
-                    <h1>📚 Library Reservation</h1>
-                    <p>Table Management System</p>
-                </div>
-                
-                <div class="login-tabs">
-                    <button class="login-tab-btn active" data-tab="user">User Login</button>
-                    <button class="login-tab-btn" data-tab="admin">Admin Login</button>
-                </div>
 
-                <!-- User Login Tab -->
-                <div id="userLoginTab" class="login-tab-content active">
-                    <form id="userLoginForm" class="login-form">
-                        <div class="form-group">
-                            <label for="userName">Full Name</label>
-                            <input type="text" id="userName" placeholder="Enter your full name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="userEmail">Email</label>
-                            <input type="email" id="userEmail" placeholder="Enter your email" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-large">Enter as User</button>
-                    </form>
-                </div>
+    <div id="alertBox">⚠️ 5 Minutes remaining! Check your extensions.</div>
 
-                <!-- Admin Login Tab -->
-                <div id="adminLoginTab" class="login-tab-content">
-                    <form id="adminLoginForm" class="login-form">
-                        <div class="form-group">
-                            <label for="adminUsername">Username</label>
-                            <input type="text" id="adminUsername" placeholder="Enter admin username" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="adminPassword">Password</label>
-                            <input type="password" id="adminPassword" placeholder="Enter admin password" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-large">Login as Admin</button>
-                    </form>
-                    <div class="admin-hint">
-                        <p><strong>Demo Credentials:</strong></p>
-                        <p>Username: <code>admin</code></p>
-                        <p>Password: <code>admin123</code></p>
-                    </div>
+    <div id="authOverlay">
+        <div class="auth-card">
+            <h1 style="text-align:center; color:var(--primary); margin-bottom:1rem;">🎓 SittyPie</h1>
+            <div class="tab-group">
+                <button id="tS" onclick="setMode('student')" class="tab-btn active">Student</button>
+                <button id="tA" onclick="setMode('admin')" class="tab-btn">Admin</button>
+            </div>
+            
+            <div id="studentInput">
+                <div class="avatar-upload" onclick="document.getElementById('pfpInput').click()">
+                    <img id="pfpPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E">
+                </div>
+                <input type="file" id="pfpInput" class="hidden" accept="image/*" onchange="previewImg(this)">
+                <input type="text" id="sid" placeholder="School ID Number">
+                <input type="text" id="sname" placeholder="Student Name">
+            </div>
+
+            <div id="adminInput" class="hidden">
+                <input type="password" id="apass" placeholder="Admin Password">
+            </div>
+            <button onclick="attemptLogin()" class="btn btn-blue">Enter Library</button>
+        </div>
+    </div>
+
+    <div id="app" class="hidden">
+        <nav class="navbar">
+            <div class="nav-brand">SittyPie</div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button onclick="toggleTheme()" style="background:none; border:none; font-size:1.4rem; cursor:pointer;">🌓</button>
+                <div id="userInfo" style="display:flex; align-items:center; gap:8px;"></div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div id="studentView" class="hidden">
+                <h2 class="wing-title">West Wing (Tables 1-10)</h2>
+                <div class="table-grid" id="grid-left"></div>
+                <h2 class="wing-title">East Wing (Tables 11-20)</h2>
+                <div class="table-grid" id="grid-right"></div>
+            </div>
+
+            <div id="adminView" class="hidden">
+                <div style="margin-bottom:1.5rem; display:flex; flex-direction:column; gap:10px;">
+                    <input type="text" id="adminSearch" placeholder="🔍 Search ID or Name..." onkeyup="renderAdmin()" style="margin:0;">
+                    <button onclick="resetAll()" class="btn btn-danger" style="margin:0; width:auto;">Wipe Data</button>
+                </div>
+                <div class="admin-wrap">
+                    <table class="admin-table">
+                        <tbody id="adminList"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Application -->
-    <div id="mainApp" class="container hidden">
-        <header>
-            <div class="header-left">
-                <h1>📚 Library Table Reservation System</h1>
-                <p id="headerSubtitle">Reserve and manage table availability</p>
-            </div>
-            <div class="header-right">
-                <div class="user-info">
-                    <span id="currentUserDisplay">User</span>
-                    <span id="userRoleDisplay" class="role-badge">User</span>
-                </div>
-                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
-            </div>
-        </header>
+    <script>
+        let mode = 'student', currentUser = null, alerted = false, currentPfp = "";
+        
+        const initialTables = [];
+        for(let i=1; i<=20; i++) initialTables.push({ id: i, name: "Table "+i, wing: i<=10 ? "left" : "right", max: 4, bookings: [] });
 
-        <div class="main-content">
-            <!-- Admin Panel -->
-            <section id="adminPanel" class="admin-panel hidden">
-                <div class="admin-header">
-                    <h2>🔧 Admin Control Panel</h2>
-                </div>
-                
-                <div class="admin-controls">
-                    <div class="admin-section">
-                        <h3>Table Management</h3>
-                        <div class="admin-buttons">
-                            <button id="resetAllTablesBtn" class="btn btn-danger">Reset All Tables</button>
-                            <button id="clearAllDataBtn" class="btn btn-danger">Clear All Data</button>
+        let db = {
+            users: JSON.parse(localStorage.getItem('rsp_users')) || {},
+            tables: JSON.parse(localStorage.getItem('rsp_tables')) || initialTables
+        };
+
+        function previewImg(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('pfpPreview').src = e.target.result;
+                    currentPfp = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function toggleTheme() {
+            const t = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', t);
+            localStorage.setItem('rsp_theme', t);
+        }
+        document.body.setAttribute('data-theme', localStorage.getItem('rsp_theme') || 'light');
+
+        function setMode(m) {
+            mode = m;
+            document.getElementById('tS').className = m==='student' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tA').className = m==='admin' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('studentInput').classList.toggle('hidden', m==='admin');
+            document.getElementById('adminInput').classList.toggle('hidden', m==='student');
+        }
+
+        function attemptLogin() {
+            if (mode === 'admin') {
+                if (document.getElementById('apass').value === 'admin123') {
+                    currentUser = { role: 'admin', name: 'Admin', id: 'MASTER' };
+                    showApp();
+                } else alert("Wrong Password");
+            } else {
+                const id = document.getElementById('sid').value, name = document.getElementById('sname').value;
+                if (!id || !name) return alert("Required fields missing");
+                db.users[id] = { name, pfp: currentPfp };
+                currentUser = { role: 'student', id, name, pfp: currentPfp };
+                save(); showApp();
+            }
+        }
+
+        function showApp() {
+            document.getElementById('authOverlay').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            document.getElementById('userInfo').innerHTML = `
+                <div style="text-align:right; font-size:0.7rem; font-weight:700;">${currentUser.name}<br><span onclick="location.reload()" style="color:var(--danger); cursor:pointer">Logout</span></div>
+                ${currentUser.pfp ? `<img src="${currentUser.pfp}" class="user-pfp" style="width:35px; height:35px;">` : ''}
+            `;
+            if (currentUser.role === 'admin') document.getElementById('adminView').classList.remove('hidden');
+            else { document.getElementById('studentView').classList.remove('hidden'); renderGrids(); }
+            setInterval(tick, 1000);
+        }
+
+        function renderGrids() {
+            const draw = (t) => `
+                <div class="seat-card" id="card-${t.id}">
+                    <div id="badge-${t.id}"></div>
+                    <h3>${t.name}</h3>
+                    <div id="form-${t.id}">
+                        <div style="display:flex; gap:5px;">
+                            <select id="time-${t.id}"><option value="300">5hr</option><option value="60">1hr</option><option value="5">5m</option></select>
+                            <select id="qty-${t.id}">${genOpts(t.max)}</select>
                         </div>
+                        <textarea id="reason-${t.id}" placeholder="Purpose..."></textarea>
+                        <label style="font-size:0.75rem; display:flex; gap:5px; margin:8px 0;"><input type="checkbox" id="sh-${t.id}" checked style="width:auto"> Allow Sharing</label>
+                        <button onclick="book('${t.id}')" class="btn btn-blue">Book</button>
                     </div>
-
-                    <div class="admin-section">
-                        <h3>Add New Table</h3>
-                        <div class="form-inline">
-                            <input type="number" id="newTableCapacity" placeholder="Capacity (seats)" min="1" max="20" value="4">
-                            <button id="addTableBtn" class="btn btn-primary">Add Table</button>
-                        </div>
-                    </div>
-
-                    <div class="admin-section">
-                        <h3>System Stats</h3>
-                        <div class="admin-stats">
-                            <div class="admin-stat-item">
-                                <span>Total Bookings:</span>
-                                <strong id="totalBookings">0</strong>
+                    <div id="active-${t.id}" class="hidden">
+                        <div id="occList-${t.id}"></div>
+                        <div id="myCtrl-${t.id}" class="hidden" style="border-top:1px dashed var(--border); margin-top:10px; padding-top:10px">
+                            <p style="font-size:0.7rem; font-weight:800;" id="extLog-${t.id}"></p>
+                            <div id="extBtns-${t.id}" style="display:flex; gap:5px">
+                                <button class="btn btn-ext" onclick="extend('${t.id}', 5)">+5m</button>
+                                <button class="btn btn-ext" onclick="extend('${t.id}', 10)">+10m</button>
                             </div>
-                            <div class="admin-stat-item">
-                                <span>Total Users:</span>
-                                <strong id="totalUsers">0</strong>
-                            </div>
-                            <div class="admin-stat-item">
-                                <span>Database Size:</span>
-                                <strong id="databaseSize">0 KB</strong>
-                            </div>
+                            <button onclick="leave('${t.id}')" class="btn btn-danger">Leave</button>
                         </div>
                     </div>
-                </div>
+                </div>`;
+            document.getElementById('grid-left').innerHTML = db.tables.filter(t => t.wing === 'left').map(draw).join('');
+            document.getElementById('grid-right').innerHTML = db.tables.filter(t => t.wing === 'right').map(draw).join('');
+        }
 
-                <!-- Admin Data View Tabs -->
-                <div class="admin-data-tabs">
-                    <button class="admin-data-tab-btn active" data-tab="bookings">All Bookings</button>
-                    <button class="admin-data-tab-btn" data-tab="users">User Accounts</button>
-                    <button class="admin-data-tab-btn" data-tab="tables">Table Status</button>
-                </div>
+        function tick() {
+            db.tables.forEach(t => {
+                t.bookings = t.bookings.filter(b => b.exp > Date.now());
+                const used = t.bookings.reduce((s, b) => s + b.seats, 0);
+                const mine = t.bookings.find(b => b.uid === currentUser.id);
+                const shareable = t.bookings.length === 0 || t.bookings.every(b => b.share);
 
-                <div class="admin-data-view">
-                    <!-- Bookings Tab -->
-                    <div id="bookingsView" class="admin-data-tab-content active">
-                        <h3>All Bookings</h3>
-                        <div id="adminBookingsTable" class="admin-table"></div>
-                    </div>
+                if (currentUser.role === 'student') {
+                    const bge = document.getElementById(`badge-${t.id}`);
+                    const card = document.getElementById(`card-${t.id}`);
+                    card.className = mine ? 'seat-card mine' : 'seat-card';
+                    if (used >= t.max) { bge.innerHTML = `<span style="color:var(--danger); font-size:0.7rem; font-weight:800;">FULL</span>`; document.getElementById(`form-${t.id}`).classList.add('hidden'); }
+                    else if (!shareable) { bge.innerHTML = `<span style="color:var(--primary); font-size:0.7rem; font-weight:800;">PRIVATE</span>`; document.getElementById(`form-${t.id}`).classList.add('hidden'); }
+                    else { bge.innerHTML = `<span style="color:var(--success); font-size:0.7rem; font-weight:800;">AVAILABLE: ${t.max-used}</span>`; document.getElementById(`form-${t.id}`).classList.remove('hidden'); }
 
-                    <!-- Users Tab -->
-                    <div id="usersView" class="admin-data-tab-content">
-                        <h3>User Accounts</h3>
-                        <div id="adminUsersTable" class="admin-table"></div>
-                    </div>
+                    if(mine) {
+                        document.getElementById(`form-${t.id}`).classList.add('hidden');
+                        document.getElementById(`active-${t.id}`).classList.remove('hidden');
+                        document.getElementById(`myCtrl-${t.id}`).classList.remove('hidden');
+                        document.getElementById(`extLog-${t.id}`).innerText = `EXTENSIONS: ${mine.exts}/2`;
+                        if(mine.exts >= 2) document.getElementById(`extBtns-${t.id}`).classList.add('hidden');
+                        if((mine.exp - Date.now()) < 300000 && !alerted) { showA(); alerted = true; }
+                    }
+                    document.getElementById(`occList-${t.id}`).innerHTML = t.bookings.map(b => `
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
+                            <img src="${db.users[b.uid].pfp || ''}" style="width:25px; height:25px; border-radius:50%; object-fit:cover;">
+                            <span style="font-size:0.8rem; flex:1;"><b>${db.users[b.uid].name}</b></span>
+                            <span style="font-size:0.8rem; color:var(--primary)">${fmt(b.exp-Date.now())}</span>
+                        </div>`).join('');
+                }
+            });
+            if (currentUser.role === 'admin') renderAdmin();
+        }
 
-                    <!-- Tables Tab -->
-                    <div id="tablesView" class="admin-data-tab-content">
-                        <h3>Table Status</h3>
-                        <div id="adminTablesTable" class="admin-table"></div>
-                    </div>
-                </div>
-            </section>
+        function renderAdmin() {
+            const q = document.getElementById('adminSearch').value.toLowerCase();
+            document.getElementById('adminList').innerHTML = db.tables.map(t => {
+                const fb = t.bookings.filter(b => b.uid.toLowerCase().includes(q) || db.users[b.uid].name.toLowerCase().includes(q));
+                if (q !== "" && fb.length === 0 && !t.name.toLowerCase().includes(q)) return "";
+                return `<tr style="border-bottom:1px solid var(--border)">
+                    <td style="padding:15px"><b>${t.name}</b><br><input type="number" value="${t.max}" onchange="updateCap('${t.id}',this.value)" style="width:60px; padding:2px; font-size:0.8rem"></td>
+                    <td style="padding:15px">${t.bookings.map(b => `
+                        <div class="student-chip">
+                            <img src="${db.users[b.uid].pfp}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                            <span style="flex:1"><b>${b.uid}</b>: ${db.users[b.uid].name}<br><small>${b.reason}</small></span>
+                            <button onclick="kick('${t.id}','${b.uid}')" style="color:var(--danger); background:none; border:none; font-weight:bold; cursor:pointer;">KICK</button>
+                        </div>`).join('') || 'Quiet'}</td>
+                </tr>`;
+            }).join('');
+        }
 
-            <!-- Statistics Section -->
-            <section class="stats-section">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalTables">8</div>
-                    <div class="stat-label">Total Tables</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number available" id="availableTables">0</div>
-                    <div class="stat-label">Available Tables</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number occupied" id="occupiedTables">0</div>
-                    <div class="stat-label">Occupied Tables</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalSeatsAvailable">0</div>
-                    <div class="stat-label">Total Seats Available</div>
-                </div>
-            </section>
+        function book(tid) {
+            if(db.tables.some(t => t.bookings.some(b => b.uid === currentUser.id))) return alert("Booking exists!");
+            const r = document.getElementById(`reason-${tid}`).value;
+            if(!r) return alert("Reason required");
+            db.tables.find(x => x.id == tid).bookings.push({ uid: currentUser.id, seats: parseInt(document.getElementById(`qty-${tid}`).value), exp: Date.now() + (document.getElementById(`time-${tid}`).value * 60000), reason: r, share: document.getElementById(`sh-${tid}`).checked, exts: 0 });
+            alerted = false; save();
+        }
 
-            <!-- Filters Section -->
-            <section class="filters-section">
-                <button class="filter-btn active" data-filter="all">All Tables</button>
-                <button class="filter-btn" data-filter="available">Available Only</button>
-                <button class="filter-btn" data-filter="occupied">Occupied Only</button>
-            </section>
+        function extend(tid, m) {
+            const b = db.tables.find(x => x.id == tid).bookings.find(x => x.uid === currentUser.id);
+            if(b.exts >= 2) return alert("Max extensions!");
+            b.exp += (m * 60000); b.exts++; alerted = false; save();
+        }
 
-            <!-- Tables Grid -->
-            <section class="tables-section">
-                <div id="tablesGrid" class="tables-grid">
-                    <!-- Tables will be dynamically generated here -->
-                </div>
-            </section>
-        </div>
-    </div>
-
-    <!-- Modal for Booking -->
-    <div id="bookingModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Book Table <span id="tableNumber"></span></h2>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="bookingUserName">Your Name:</label>
-                    <input type="text" id="bookingUserName" placeholder="Enter your full name" required>
-                </div>
-                <div class="form-group">
-                    <label for="bookingUserEmail">Email:</label>
-                    <input type="email" id="bookingUserEmail" placeholder="Enter your email" required>
-                </div>
-                <div class="form-group">
-                    <label for="bookingSeatsNeeded">Number of Seats Needed:</label>
-                    <input type="number" id="bookingSeatsNeeded" min="1" max="20" placeholder="1" required>
-                </div>
-                <div class="form-group">
-                    <label for="bookingPurpose">Purpose/Notes:</label>
-                    <textarea id="bookingPurpose" placeholder="What will you use the table for?" rows="3"></textarea>
-                </div>
-                <button id="confirmBooking" class="btn btn-primary">Confirm Booking</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Table Details -->
-    <div id="detailsModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Table <span id="detailsTableNumber"></span> Details</h2>
-            <div class="modal-body">
-                <div class="table-details">
-                    <p><strong>Status:</strong> <span id="detailsStatus"></span></p>
-                    <p><strong>Capacity:</strong> <span id="detailsCapacity"></span> seats</p>
-                    <p><strong>Available Seats:</strong> <span id="detailsAvailableSeats"></span></p>
-                    <p><strong>Booked Seats:</strong> <span id="detailsBookedSeats"></span></p>
-                    <div id="bookingsList"></div>
-                </div>
-                <div class="modal-actions">
-                    <button id="releaseTableBtn" class="btn btn-danger" style="display: none;">Mark as Available</button>
-                    <button id="editTableBtn" class="btn btn-secondary" style="display: none;">Edit Table</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for All Bookings (Admin) -->
-    <div id="allBookingsModal" class="modal">
-        <div class="modal-content modal-large">
-            <span class="close">&times;</span>
-            <h2>All Bookings Report</h2>
-            <div class="modal-body">
-                <div id="allBookingsList" class="all-bookings-list">
-                    <!-- Will be populated by JavaScript -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Edit Table (Admin) -->
-    <div id="editTableModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Edit Table <span id="editTableNumber"></span></h2>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="editTableCapacity">Capacity (seats):</label>
-                    <input type="number" id="editTableCapacity" min="1" max="20" required>
-                </div>
-                <div class="form-group">
-                    <label for="editTableBooked">Booked Seats:</label>
-                    <input type="number" id="editTableBooked" min="0" required>
-                </div>
-                <div class="form-group">
-                    <label for="editTableStatus">Status:</label>
-                    <select id="editTableStatus">
-                        <option value="available">Available</option>
-                        <option value="occupied">Occupied</option>
-                    </select>
-                </div>
-                <button id="saveTableChanges" class="btn btn-primary">Save Changes</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal for Delete User Account -->
-    <div id="deleteUserModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Delete User Account</h2>
-            <div class="modal-body">
-                <p style="color: #ef4444; font-weight: bold; margin-bottom: 15px;">⚠️ WARNING: This action cannot be undone!</p>
-                <p>Are you sure you want to delete the account for:</p>
-                <p id="deleteUserName" style="font-weight: bold; margin: 15px 0;"></p>
-                <p style="color: #6b7280; font-size: 0.95em; margin: 15px 0;">All bookings associated with this account will also be deleted.</p>
-                <div class="modal-actions">
-                    <button id="confirmDeleteUserBtn" class="btn btn-danger">Delete Account</button>
-                    <button id="cancelDeleteUserBtn" class="btn btn-secondary">Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+        function leave(tid) { db.tables.find(x => x.id == tid).bookings = db.tables.find(x => x.id == tid).bookings.filter(b => b.uid !== currentUser.id); save(); }
+        function kick(tid, uid) { db.tables.find(x => x.id == tid).bookings = db.tables.find(x => x.id == tid).bookings.filter(b => b.uid !== uid); save(); }
+        function updateCap(tid, val) { db.tables.find(t => t.id == tid).max = parseInt(val); save(); renderGrids(); }
+        function resetAll() { if(confirm("Clear?")) { db.tables.forEach(t => t.bookings = []); save(); } }
+        function genOpts(m) { let h=''; for(let i=1; i<=m; i++) h+=`<option value="${i}">${i} Seat</option>`; return h; }
+        function fmt(ms) { const s=Math.max(0, Math.floor(ms/1000)); return `${Math.floor(s/60)}m ${s%60}s`; }
+        function showA() { document.getElementById('alertBox').classList.add('show'); setTimeout(()=>document.getElementById('alertBox').classList.remove('show'), 6000); }
+        function save() { localStorage.setItem('rsp_users', JSON.stringify(db.users)); localStorage.setItem('rsp_tables', JSON.stringify(db.tables)); }
+    </script>
 </body>
 </html>
