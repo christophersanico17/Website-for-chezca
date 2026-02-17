@@ -18,21 +18,26 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; transition: background 0.3s, color 0.3s; }
-        body { background: var(--bg); color: var(--text); line-height: 1.5; overflow-x: hidden; }
+        html, body { height: 100%; background: var(--bg); color: var(--text); line-height: 1.5; overflow-x: hidden; }
 
         #alertBox { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(200%); z-index: 10000; background: var(--warning); color: white; padding: 15px 25px; border-radius: 50px; width: 90%; max-width: 400px; text-align: center; font-weight: bold; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #alertBox.show { transform: translateX(-50%) translateY(0); }
+        #alertBox.info { background: var(--primary); }
+        #alertBox.error { background: var(--danger); }
+        #alertBox.success { background: var(--success); }
         #alertBox.show { transform: translateX(-50%) translateY(0); }
 
         .navbar { background: var(--card); padding: 0.8rem 1rem; border-bottom: 2px solid var(--accent); display: flex; justify-content: space-between; align-items: center; position: sticky; top:0; z-index: 100; }
         .nav-brand { font-weight: 800; font-size: 1.3rem; color: var(--primary); }
 
         #authOverlay { position: fixed; inset: 0; z-index: 9999; background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); display: flex; align-items: center; justify-content: center; padding: 1rem; }
-        .auth-card { background: var(--card); padding: 2rem; border-radius: 1.5rem; width: 100%; max-width: 400px; }
-        .tab-group { display: flex; border-radius: 12px; overflow: hidden; margin-bottom: 1rem; border: 1px solid var(--border); }
+        .auth-card { background: var(--card); padding: 2.5rem 2rem; border-radius: 1.5rem; width: 100%; max-width: 400px; }
+        .tab-group { display: flex; border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; border: 1px solid var(--border); }
         .tab-btn { flex: 1; padding: 12px; border: none; cursor: pointer; font-weight: bold; background: var(--bg); color: var(--text); }
         .tab-btn.active { background: var(--primary); color: white; }
 
-        .container { width: 100%; max-width: 1400px; margin: 1rem auto; padding: 0 1rem; }
+        #app { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .container { width: 100%; max-width: 1400px; margin: 1rem auto; padding: 0 1rem; flex: 1; overflow-y: auto; overflow-x: hidden; }
         .wing-title { font-size: 1.5rem; font-weight: 800; margin: 1.5rem 0 1rem; color: var(--primary); border-left: 5px solid var(--accent); padding-left: 12px; }
         
         .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; }
@@ -63,18 +68,21 @@
 
     <div id="authOverlay">
         <div class="auth-card">
-            <h1 style="text-align:center; color:var(--primary); margin-bottom:1rem;">🎓 SittyPie</h1>
+            <div style="text-align:center; margin-bottom:2rem;">
+                <img src="Logo Sittypie.png" style="height:200px; width:auto; object-fit:contain; margin-bottom:15px;">
+                <h1 style="color:var(--primary); margin-bottom:1rem; font-size:2rem;">SittyPie</h1>
+            </div>
             <div class="tab-group">
                 <button id="tS" onclick="setMode('student')" class="tab-btn active">Student</button>
                 <button id="tA" onclick="setMode('admin')" class="tab-btn">Admin</button>
             </div>
             
             <div id="studentInput">
-                <div class="avatar-upload" onclick="document.getElementById('pfpInput').click()">
+                <div class="avatar-upload" onclick="document.getElementById('pfpInput').click()" style="margin-bottom:1.5rem;">
                     <img id="pfpPreview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E">
                 </div>
                 <input type="file" id="pfpInput" class="hidden" accept="image/*" onchange="previewImg(this)">
-                <input type="text" id="sid" placeholder="School ID Number">
+                <input type="text" id="sid" placeholder="000-00000" maxlength="9" oninput="formatSchoolID(this)">
                 <input type="text" id="sname" placeholder="Student Name">
             </div>
 
@@ -87,7 +95,10 @@
 
     <div id="app" class="hidden">
         <nav class="navbar">
-            <div class="nav-brand">SittyPie</div>
+            <div class="nav-brand" style="display:flex; align-items:center; gap:10px;">
+                <img src="Logo Sittypie.png" style="height:120px; width:auto; object-fit:contain;">
+                <span>SittyPie</span>
+            </div>
             <div style="display:flex; align-items:center; gap:12px;">
                 <button onclick="toggleTheme()" style="background:none; border:none; font-size:1.4rem; cursor:pointer;">🌓</button>
                 <div id="userInfo" style="display:flex; align-items:center; gap:8px;"></div>
@@ -96,16 +107,64 @@
 
         <div class="container">
             <div id="studentView" class="hidden">
-                <h2 class="wing-title">West Wing (Tables 1-10)</h2>
+                <div style="position: sticky; top: 0; background:var(--card); padding:1.5rem; border-radius:20px; border:1px solid var(--border); margin-bottom:2rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1rem; z-index: 50;">
+                    <div style="text-align:center;">
+                        <div style="font-size:2.5rem; font-weight:800; color:var(--success);" id="totalAvailable">0</div>
+                        <div style="font-size:0.85rem; color:var(--text); opacity:0.7;">Seats Available</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:2.5rem; font-weight:800; color:var(--primary);" id="totalCapacity">0</div>
+                        <div style="font-size:0.85rem; color:var(--text); opacity:0.7;">Total Capacity</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:2.5rem; font-weight:800; color:var(--warning);" id="totalBooked">0</div>
+                        <div style="font-size:0.85rem; color:var(--text); opacity:0.7;">Seats Booked</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:2.5rem; font-weight:800; color:var(--accent);" id="leftWingTables">0/10</div>
+                        <div style="font-size:0.85rem; color:var(--text); opacity:0.7;">Left Wing Tables</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:2.5rem; font-weight:800; color:var(--accent);" id="rightWingTables">0/10</div>
+                        <div style="font-size:0.85rem; color:var(--text); opacity:0.7;">Right Wing Tables</div>
+                    </div>
+                </div>
+                <h2 class="wing-title">Left Wing (Tables 1-10)</h2>
                 <div class="table-grid" id="grid-left"></div>
-                <h2 class="wing-title">East Wing (Tables 11-20)</h2>
+                <h2 class="wing-title">Right Wing (Tables 11-20)</h2>
                 <div class="table-grid" id="grid-right"></div>
             </div>
 
             <div id="adminView" class="hidden">
+                <div style="position: sticky; top: 0; background:var(--card); padding:1.5rem; border-radius:20px; border:1px solid var(--border); margin-bottom:2rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:1rem; z-index: 50;">
+                    <div style="text-align:center;">
+                        <div style="font-size:2.5rem; font-weight:800; color:var(--success);" id="adminTotalAvailable">0</div>
+                        <div style="font-size:0.85rem; color:var(--text); opacity:0.7;">Seats Available</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:2.5rem; font-weight:800; color:var(--primary);" id="adminTotalCapacity">0</div>
+                        <div style="font-size:0.85rem; color:var(--text); opacity:0.7;">Total Capacity</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:2.5rem; font-weight:800; color:var(--warning);" id="adminTotalBooked">0</div>
+                        <div style="font-size:0.85rem; color:var(--text); opacity:0.7;">Seats Booked</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:2.5rem; font-weight:800; color:var(--accent);" id="adminLeftWingTables">0/10</div>
+                        <div style="font-size:0.85rem; color:var(--text); opacity:0.7;">Left Wing Tables</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:2.5rem; font-weight:800; color:var(--accent);" id="adminRightWingTables">0/10</div>
+                        <div style="font-size:0.85rem; color:var(--text); opacity:0.7;">Right Wing Tables</div>
+                    </div>
+                </div>
                 <div style="margin-bottom:1.5rem; display:flex; flex-direction:column; gap:10px;">
                     <input type="text" id="adminSearch" placeholder="🔍 Search ID or Name..." onkeyup="renderAdmin()" style="margin:0;">
-                    <button onclick="resetAll()" class="btn btn-danger" style="margin:0; width:auto;">Wipe Data</button>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="addTable('left')" class="btn btn-blue" style="margin:0; flex:1;">➕ Add Left Wing Table</button>
+                        <button onclick="addTable('right')" class="btn btn-blue" style="margin:0; flex:1;">➕ Add Right Wing Table</button>
+                        <button onclick="resetAll()" class="btn btn-danger" style="margin:0; width:auto;">Wipe Data</button>
+                    </div>
                 </div>
                 <div class="admin-wrap">
                     <table class="admin-table">
@@ -153,15 +212,34 @@
             document.getElementById('adminInput').classList.toggle('hidden', m==='student');
         }
 
+        function formatSchoolID(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 9) value = value.slice(0, 9);
+            if (value.length > 3) value = value.slice(0, 3) + '-' + value.slice(3);
+            input.value = value;
+        }
+
+        function validateSchoolID(id) {
+            return /^\d{3}-\d{5}$/.test(id);
+        }
+
+        function notify(message, type = 'warning', duration = 5000) {
+            const box = document.getElementById('alertBox');
+            box.innerText = message;
+            box.className = `${type} show`;
+            setTimeout(() => box.classList.remove('show'), duration);
+        }
+
         function attemptLogin() {
             if (mode === 'admin') {
                 if (document.getElementById('apass').value === 'admin123') {
                     currentUser = { role: 'admin', name: 'Admin', id: 'MASTER' };
                     showApp();
-                } else alert("Wrong Password");
+                } else notify('❌ Wrong Password', 'error');
             } else {
                 const id = document.getElementById('sid').value, name = document.getElementById('sname').value;
-                if (!id || !name) return alert("Required fields missing");
+                if (!id || !name) return notify('⚠️ Required fields missing', 'error');
+                if (!validateSchoolID(id)) return notify('❌ School ID must be in format 000-00000', 'error');
                 db.users[id] = { name, pfp: currentPfp };
                 currentUser = { role: 'student', id, name, pfp: currentPfp };
                 save(); showApp();
@@ -181,14 +259,17 @@
         }
 
         function renderGrids() {
-            const draw = (t) => `
+            const draw = (t) => {
+                const used = t.bookings.reduce((s, b) => s + b.seats, 0);
+                const available = t.max - used;
+                return `
                 <div class="seat-card" id="card-${t.id}">
                     <div id="badge-${t.id}"></div>
                     <h3>${t.name}</h3>
                     <div id="form-${t.id}">
                         <div style="display:flex; gap:5px;">
                             <select id="time-${t.id}"><option value="300">5hr</option><option value="60">1hr</option><option value="5">5m</option></select>
-                            <select id="qty-${t.id}">${genOpts(t.max)}</select>
+                            <select id="qty-${t.id}">${genOpts(available)}</select>
                         </div>
                         <textarea id="reason-${t.id}" placeholder="Purpose..."></textarea>
                         <label style="font-size:0.75rem; display:flex; gap:5px; margin:8px 0;"><input type="checkbox" id="sh-${t.id}" checked style="width:auto"> Allow Sharing</label>
@@ -199,13 +280,13 @@
                         <div id="myCtrl-${t.id}" class="hidden" style="border-top:1px dashed var(--border); margin-top:10px; padding-top:10px">
                             <p style="font-size:0.7rem; font-weight:800;" id="extLog-${t.id}"></p>
                             <div id="extBtns-${t.id}" style="display:flex; gap:5px">
-                                <button class="btn btn-ext" onclick="extend('${t.id}', 5)">+5m</button>
-                                <button class="btn btn-ext" onclick="extend('${t.id}', 10)">+10m</button>
+                                <button class="btn btn-ext" onclick="extend('${t.id}', 60)">+1hr</button>
                             </div>
                             <button onclick="leave('${t.id}')" class="btn btn-danger">Leave</button>
                         </div>
                     </div>
                 </div>`;
+            };
             document.getElementById('grid-left').innerHTML = db.tables.filter(t => t.wing === 'left').map(draw).join('');
             document.getElementById('grid-right').innerHTML = db.tables.filter(t => t.wing === 'right').map(draw).join('');
         }
@@ -229,8 +310,7 @@
                         document.getElementById(`form-${t.id}`).classList.add('hidden');
                         document.getElementById(`active-${t.id}`).classList.remove('hidden');
                         document.getElementById(`myCtrl-${t.id}`).classList.remove('hidden');
-                        document.getElementById(`extLog-${t.id}`).innerText = `EXTENSIONS: ${mine.exts}/2`;
-                        if(mine.exts >= 2) document.getElementById(`extBtns-${t.id}`).classList.add('hidden');
+                        document.getElementById(`extLog-${t.id}`).innerText = `EXTENSIONS USED: ${mine.exts}`;
                         if((mine.exp - Date.now()) < 300000 && !alerted) { showA(); alerted = true; }
                     }
                     document.getElementById(`occList-${t.id}`).innerHTML = t.bookings.map(b => `
@@ -241,6 +321,30 @@
                         </div>`).join('');
                 }
             });
+            
+            if (currentUser.role === 'student') {
+                const totalCapacity = db.tables.reduce((sum, t) => sum + t.max, 0);
+                const totalBooked = db.tables.reduce((sum, t) => sum + t.bookings.reduce((s, b) => s + b.seats, 0), 0);
+                const totalAvailable = totalCapacity - totalBooked;
+                
+                const leftWingTables = db.tables.filter(t => t.wing === 'left');
+                const rightWingTables = db.tables.filter(t => t.wing === 'right');
+                const leftWingAvailable = leftWingTables.filter(t => {
+                    const used = t.bookings.reduce((s, b) => s + b.seats, 0);
+                    return used < t.max;
+                }).length;
+                const rightWingAvailable = rightWingTables.filter(t => {
+                    const used = t.bookings.reduce((s, b) => s + b.seats, 0);
+                    return used < t.max;
+                }).length;
+                
+                document.getElementById('totalCapacity').innerText = totalCapacity;
+                document.getElementById('totalBooked').innerText = totalBooked;
+                document.getElementById('totalAvailable').innerText = totalAvailable;
+                document.getElementById('leftWingTables').innerText = `${leftWingAvailable}/${leftWingTables.length}`;
+                document.getElementById('rightWingTables').innerText = `${rightWingAvailable}/${rightWingTables.length}`;
+            }
+            
             if (currentUser.role === 'admin') renderAdmin();
         }
 
@@ -250,35 +354,96 @@
                 const fb = t.bookings.filter(b => b.uid.toLowerCase().includes(q) || db.users[b.uid].name.toLowerCase().includes(q));
                 if (q !== "" && fb.length === 0 && !t.name.toLowerCase().includes(q)) return "";
                 return `<tr style="border-bottom:1px solid var(--border)">
-                    <td style="padding:15px"><b>${t.name}</b><br><input type="number" value="${t.max}" onchange="updateCap('${t.id}',this.value)" style="width:60px; padding:2px; font-size:0.8rem"></td>
+                    <td style="padding:15px">
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <b>${t.name}</b><br>
+                                <small style="color:var(--accent); font-weight:600;">${t.wing === 'left' ? '⬅️ Left Wing' : '➡️ Right Wing'}</small><br>
+                                <input type="number" value="${t.max}" onchange="updateCap('${t.id}',this.value)" style="width:60px; padding:2px; font-size:0.8rem">
+                            </div>
+                            <button onclick="deleteTable('${t.id}')" style="color:var(--danger); background:none; border:none; font-weight:bold; cursor:pointer; font-size:1.1rem;" title="Delete Table">🗑️</button>
+                        </div>
+                    </td>
                     <td style="padding:15px">${t.bookings.map(b => `
                         <div class="student-chip">
                             <img src="${db.users[b.uid].pfp}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
-                            <span style="flex:1"><b>${b.uid}</b>: ${db.users[b.uid].name}<br><small>${b.reason}</small></span>
+                            <span style="flex:1">
+                                <b>${b.uid}</b>: ${db.users[b.uid].name}<br>
+                                <small style="color:var(--primary); font-weight:600;">⏱️ ${fmt(b.exp-Date.now())} | 🪑 ${b.seats} seat${b.seats > 1 ? 's' : ''}</small><br>
+                                <small style="color:var(--text); opacity:0.8;">📝 ${b.reason}</small>
+                            </span>
                             <button onclick="kick('${t.id}','${b.uid}')" style="color:var(--danger); background:none; border:none; font-weight:bold; cursor:pointer;">KICK</button>
                         </div>`).join('') || 'Quiet'}</td>
                 </tr>`;
             }).join('');
+            
+            // Update admin dashboard stats
+            const totalCapacity = db.tables.reduce((sum, t) => sum + t.max, 0);
+            const totalBooked = db.tables.reduce((sum, t) => sum + t.bookings.reduce((s, b) => s + b.seats, 0), 0);
+            const totalAvailable = totalCapacity - totalBooked;
+            
+            const leftWingTables = db.tables.filter(t => t.wing === 'left');
+            const rightWingTables = db.tables.filter(t => t.wing === 'right');
+            const leftWingAvailable = leftWingTables.filter(t => {
+                const used = t.bookings.reduce((s, b) => s + b.seats, 0);
+                return used < t.max;
+            }).length;
+            const rightWingAvailable = rightWingTables.filter(t => {
+                const used = t.bookings.reduce((s, b) => s + b.seats, 0);
+                return used < t.max;
+            }).length;
+            
+            document.getElementById('adminTotalCapacity').innerText = totalCapacity;
+            document.getElementById('adminTotalBooked').innerText = totalBooked;
+            document.getElementById('adminTotalAvailable').innerText = totalAvailable;
+            document.getElementById('adminLeftWingTables').innerText = `${leftWingAvailable}/${leftWingTables.length}`;
+            document.getElementById('adminRightWingTables').innerText = `${rightWingAvailable}/${rightWingTables.length}`;
         }
 
         function book(tid) {
-            if(db.tables.some(t => t.bookings.some(b => b.uid === currentUser.id))) return alert("Booking exists!");
+            if(db.tables.some(t => t.bookings.some(b => b.uid === currentUser.id))) return notify('⚠️ Booking exists! Leave current table first.', 'warning');
             const r = document.getElementById(`reason-${tid}`).value;
-            if(!r) return alert("Reason required");
+            if(!r) return notify('❌ Reason required', 'error');
             db.tables.find(x => x.id == tid).bookings.push({ uid: currentUser.id, seats: parseInt(document.getElementById(`qty-${tid}`).value), exp: Date.now() + (document.getElementById(`time-${tid}`).value * 60000), reason: r, share: document.getElementById(`sh-${tid}`).checked, exts: 0 });
-            alerted = false; save();
+            alerted = false; save(); notify(`✅ Successfully booked Table ${tid}!`, 'success');
         }
 
         function extend(tid, m) {
             const b = db.tables.find(x => x.id == tid).bookings.find(x => x.uid === currentUser.id);
-            if(b.exts >= 2) return alert("Max extensions!");
             b.exp += (m * 60000); b.exts++; alerted = false; save();
         }
 
         function leave(tid) { db.tables.find(x => x.id == tid).bookings = db.tables.find(x => x.id == tid).bookings.filter(b => b.uid !== currentUser.id); save(); }
         function kick(tid, uid) { db.tables.find(x => x.id == tid).bookings = db.tables.find(x => x.id == tid).bookings.filter(b => b.uid !== uid); save(); }
         function updateCap(tid, val) { db.tables.find(t => t.id == tid).max = parseInt(val); save(); renderGrids(); }
-        function resetAll() { if(confirm("Clear?")) { db.tables.forEach(t => t.bookings = []); save(); } }
+        function deleteTable(tid) {
+            if (!confirm(`Are you sure you want to delete ${db.tables.find(t => t.id == tid).name}?`)) return;
+            db.tables = db.tables.filter(t => t.id != tid);
+            save();
+            renderAdmin();
+            notify(`✅ Table deleted!`, 'success');
+        }
+
+        function addTable(wing) {
+            const capacity = prompt(`Enter capacity for new ${wing === 'left' ? 'Left' : 'Right'} Wing table:`, '4');
+            if (capacity === null || capacity === '' || isNaN(capacity) || capacity < 1) return notify('❌ Invalid capacity', 'error');
+            
+            const nextId = Math.max(...db.tables.map(t => parseInt(t.id)), 0) + 1;
+            const newTable = {
+                id: nextId,
+                name: `Table ${nextId}`,
+                wing: wing,
+                max: parseInt(capacity),
+                bookings: []
+            };
+            
+            db.tables.push(newTable);
+            save();
+            renderAdmin();
+            notify(`✅ Table ${nextId} added to ${wing === 'left' ? 'Left' : 'Right'} Wing!`, 'success');
+        }
+
+        function resetAll() { if(confirm("Clear all bookings?")) { db.tables.forEach(t => t.bookings = []); save(); renderAdmin(); } }
         function genOpts(m) { let h=''; for(let i=1; i<=m; i++) h+=`<option value="${i}">${i} Seat</option>`; return h; }
         function fmt(ms) { const s=Math.max(0, Math.floor(ms/1000)); return `${Math.floor(s/60)}m ${s%60}s`; }
         function showA() { document.getElementById('alertBox').classList.add('show'); setTimeout(()=>document.getElementById('alertBox').classList.remove('show'), 6000); }
